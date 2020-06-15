@@ -73,12 +73,3 @@ This needs some further research to figure out what would work best for us. Avai
 Some other condcerns have been brought up that we should keep in mind. One is that long running containers (> 2 Weeks) may become stale and need a restart. It is unclear whether this is an Icinga issue or something else.
 
 Another concern is that networking can be a challenge when separating services into separate containers.
-
-### Development
-For easier development and changes of earlier stages the containers will contain lots of `RUN` blocks which is very "not best-practice" in Docker. This will be changed before the first release.
-
-### Influences
-There are many Docker containers for Icinga 2 out in the wild. Most were built to serve a special purpose and might not be fit for what this project is aiming for. Nonetheless the first commits rely heavily on the work of following users:
-* [lazyfrosch](https://github.com/lazyfrosch/docker-icinga2)
-* [bodsch](https://github.com/bodsch/docker-icinga2)
-* [jjethwa](https://github.com/jjethwa/icinga2)
