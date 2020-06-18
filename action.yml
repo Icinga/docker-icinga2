@@ -1,0 +1,4 @@
+name: Icinga 2 Docker image
+runs:
+  using: docker
+  image: action.Dockerfile
