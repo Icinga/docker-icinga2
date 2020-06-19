@@ -1,0 +1,2 @@
+deb http://deb.debian.org/debian buster-backports main
+deb [arch=amd64] https://download.docker.com/linux/debian buster stable
