@@ -34,6 +34,8 @@ mkimg () {
 
 	cd ..
 
+	rm icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
+
 	cache save
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
