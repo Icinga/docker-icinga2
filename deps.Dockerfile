@@ -7,6 +7,8 @@ RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
 	git -C check_nwc_health.git archive --prefix=check_nwc_health/ a5295475c9bbd6df9fe7432347f7c5aba16b49df |tar -x ;\
 	git clone --bare https://github.com/bucardo/check_postgres.git ;\
 	git -C check_postgres.git archive --prefix=check_postgres/ 58de936fdfe4073413340cbd9061aa69099f1680 |tar -x ;\
+	git clone --bare https://github.com/matteocorti/check_ssl_cert.git ;\
+	git -C check_ssl_cert.git archive --prefix=check_ssl_cert/ 1e72259a9c1cd8c60e229725293c51e03c3ba814 |tar -x ;\
 	rm -rf *.git
 
 
@@ -47,10 +49,11 @@ RUN cd /check_postgres ;\
 
 FROM debian:buster-slim
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins postfix; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins openssl postfix; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "icinga"]
 
 COPY --from=build /check_mssql_health/bin/ /
 COPY --from=build /check_nwc_health/bin/ /
 COPY --from=build /check_postgres/bin/ /
+COPY --from=clone /check_ssl_cert/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
