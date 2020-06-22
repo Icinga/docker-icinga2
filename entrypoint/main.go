@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/otiai10/copy"
 	"golang.org/x/crypto/ssh/terminal"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -22,6 +24,32 @@ func entrypoint() error {
 	if len(os.Args) < 2 {
 		logf(warning, "Nothing to do.")
 		return nil
+	}
+
+	if os.Getpid() == 1 {
+		logf(info, "Initializing /data as we're the init process (PID 1)")
+
+		for _, dir := range []string{"etc", "var/cache", "var/lib", "var/log", "var/run", "var/spool"} {
+			dest := path.Join("/data", dir, "icinga2")
+			logf(info, "Checking %#v", dest)
+
+			if _, errSt := os.Stat(dest); errSt != nil {
+				if os.IsNotExist(errSt) {
+					src := path.Join("/data-init", dir, "icinga2")
+					logf(info, "Copying %#v to %#v", src, dest)
+
+					if errMA := os.MkdirAll(path.Dir(dest), 0755); errMA != nil {
+						return errMA
+					}
+
+					if errCp := copy.Copy(src, dest); errCp != nil {
+						return errCp
+					}
+				} else {
+					return errSt
+				}
+			}
+		}
 	}
 
 	path := os.Args[1]
