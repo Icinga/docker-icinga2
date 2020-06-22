@@ -1,3 +1,11 @@
+FROM golang:buster as entrypoint
+
+COPY entrypoint /entrypoint
+
+WORKDIR /entrypoint
+RUN ["go", "build", "."]
+
+
 FROM buildpack-deps:scm as clone
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
@@ -51,9 +59,13 @@ FROM debian:buster-slim
 
 RUN ["/bin/bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins openssl postfix; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
+COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
+
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "icinga"]
 
 COPY --from=build /check_mssql_health/bin/ /
 COPY --from=build /check_nwc_health/bin/ /
 COPY --from=build /check_postgres/bin/ /
 COPY --from=clone /check_ssl_cert/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
+
+ENTRYPOINT ["/entrypoint"]
