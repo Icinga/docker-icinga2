@@ -29,7 +29,7 @@ ADD action-base.list /etc/apt/sources.list.d/misc.list
 
 RUN apt-get update ;\
 	apt-get install --no-install-{recommends,suggests} -y \
-		bison cmake docker-ce-cli flex g++ \
+		bison cmake docker-ce-cli flex g++ git \
 		libboost{,-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}}1.67-dev \
 		libedit-dev libmariadbclient-dev libpq-dev libssl-dev make nodejs ;\
 	apt-get install --no-install-{recommends,suggests} -y ccache ;\
