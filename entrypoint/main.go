@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"github.com/otiai10/copy"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
+
+const ca = "/var/lib/icinga2/certs/ca.crt"
+const crtMode = 0640
 
 func main() {
 	if err := entrypoint(); err != nil {
@@ -48,6 +53,69 @@ func entrypoint() error {
 				} else {
 					return errSt
 				}
+			}
+		}
+
+		logf(info, "Checking %#v", ca)
+
+		if _, errSt := os.Stat(ca); errSt != nil {
+			if os.IsNotExist(errSt) {
+				nodeSetup := []string{"node", "setup"}
+				runNodeSetup := false
+
+				for _, env := range os.Environ() {
+					if kv := strings.SplitN(env, "=", 2); len(kv) == 2 {
+						if strings.HasPrefix(kv[0], "ICINGA_") {
+							switch kv[0] = strings.ToLower(strings.TrimPrefix(kv[0], "ICINGA_")); kv[0] {
+							case "accept_commands", "accept_config", "disable_confd", "master":
+								runNodeSetup = true
+								if kv[1] == "1" {
+									nodeSetup = append(nodeSetup, "--"+strings.ReplaceAll(kv[0], "_", "-"))
+								}
+							case "cn", "endpoint", "global_zones", "listen",
+								"parent_host", "parent_zone", "ticket", "zone":
+								runNodeSetup = true
+								nodeSetup = append(nodeSetup, "--"+kv[0], kv[1])
+							case "trustedcert":
+								logf(info, "Writing trusted certificate")
+								runNodeSetup = true
+
+								dir, errTD := ioutil.TempDir("", "")
+								if errTD != nil {
+									return errTD
+								}
+
+								file := path.Join(dir, "trusted.crt")
+								if errWF := ioutil.WriteFile(file, []byte(kv[1]), crtMode); errWF != nil {
+									return errWF
+								}
+
+								nodeSetup = append(nodeSetup, "--"+kv[0], file)
+							case "cacert":
+								logf(info, "Writing CA certificate")
+								runNodeSetup = true
+
+								if errWF := ioutil.WriteFile(ca, []byte(kv[1]), crtMode); errWF != nil {
+									return errWF
+								}
+							}
+						}
+					}
+				}
+
+				if runNodeSetup {
+					logf(info, "Running 'node setup'")
+
+					cmd := exec.Command("icinga2", nodeSetup...)
+					cmd.Stdout = os.Stderr
+					cmd.Stderr = os.Stderr
+
+					if errRn := cmd.Run(); errRn != nil {
+						return errRn
+					}
+				}
+			} else {
+				return errSt
 			}
 		}
 	}
