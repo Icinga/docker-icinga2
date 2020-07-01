@@ -1,5 +1,5 @@
 FROM icinga/icinga2-builder
 
-COPY action.bash Dockerfile /
+COPY action.bash compile.bash Dockerfile /
 
 CMD ["/action.bash"]
