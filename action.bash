@@ -15,26 +15,10 @@ mkimg () {
 	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 	cache restore
 
-	export PATH="/usr/lib/ccache:$PATH"
 	mkdir -p ccache
 	ln -vs "$(pwd)/ccache" ~/.ccache
 
-	mkdir icinga2-bin
-	mkdir build
-	cd build
-
-	cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
-		-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run \
-		-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF ..
-
-	make
-	make test
-
-	make install "DESTDIR=$(pwd)/../icinga2-bin"
-
-	cd ..
-
-	rm icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
+	/compile.bash
 
 	cache save
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
