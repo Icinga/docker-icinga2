@@ -1,75 +1,100 @@
-# Icinga 2 Docker Container
+# Icinga 2 - Docker image
 
-Our goal for this project is to provide official containers for Icinga components such as Icinga 2, Icinga Web 2 and Icinga DB. The images provided are officially supported by the Icinga company. Containers resulting from the development must be capable of running in production environments.
+This image integrates [Icinga 2] into your [Docker] environment.
 
-The following notes are the result of an initial discussion regarding the topic in general. They serve as a first impression of what we plan to do and give a view on how we intend to build the images.
+## Usage
 
-## Use Cases and Motivarion
-The decision to work on official Icinga containers is driven by the requirements various Icinga users and customers are having. There are environment where administrators don't have another choice than deploying software through containers. Additionally, we think that for new users containers can be a good alternative to get started with a standard Icinga setup quickly.
+```bash
+docker network create icinga
 
-## First Steps
-The first milestone includes a simple, but rock solid Icinga 2 container. Once this is achived we move forward by adding an Icinga Web 2 container, features such as certificate handling, configuration switches and other things.
+# CA
+docker run --rm \
+	-h icinga-master \
+	-v icinga-master:/data \
+	-e ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	cat /var/lib/icinga2/certs/ca.crt > icinga-ca.crt
 
-## Technical Aspects
-There are some technical aspects that have been discussed. This list serves as starting point for more discussions as many decision need to be made during the development process.
+# Ticket
+docker run --rm \
+	-h icinga-master \
+	-v icinga-master:/data \
+	-e ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	icinga2 daemon -C
+docker run --rm \
+	-h icinga-master \
+	-v icinga-master:/data \
+	-e ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	icinga2 pki ticket --cn icinga-agent > icinga-agent.ticket
 
+# Master
+docker run --rm -d \
+	--network icinga \
+	--name icinga-master \
+	-h icinga-master \
+	-p 5665:5665 \
+	-v icinga-master:/data \
+	-e ICINGA_MASTER=1 \
+	icinga/icinga2
 
-### Versioning
-We agreed that we want to provide the following version schema for images. The version numbers are examples and the same principle applies to other Icinga containers as well.
+# Agent
+docker run --rm -d \
+	--network icinga \
+	-h icinga-agent \
+	-v icinga-agent:/data \
+	-e ICINGA_ZONE=icinga-agent \
+	-e ICINGA_ENDPOINT=icinga-master,icinga-master,5665 \
+	-e ICINGA_CACERT="$(< icinga-ca.crt)" \
+	-e ICINGA_TICKET="$(< icinga-agent.ticket)" \
+	icinga/icinga2
+```
 
-* At least two major releases of the main software within the container should be made available.
-	* For Icinga 2 this would be `2.11` and `2.12` right now.
-* All minor versions of the available major versions must be made available
-	* eg. `2.11.1`, `2.11.2`, `2.11.3`
-* When using only the major version tag, the latest minor version is pulled automatically.
-	* eg. `imagename:2.11` pulls `imagename:2.11.3`
-* The `latest` tag points to the latest stable release.
-	* For Icinga 2, this would be `2.11` as of now.
-* Additionally the `snapshot` tag is available to use snapshot builds.
+The container may listen on port 5665 and expects
+a volume on `/data` and a specific persistent hostname.
+To configure it, do one of the following:
 
-### Separation of Containers
-Each service, respectively Icinga 2 and Icinga Web 2, are available through separate containers.
+* Run the node wizard as usual. It will store all data in `/data`.
+  Hint: `docker run --rm -it -h icinga-master -v icinga-master:/data icinga/icinga2 icinga2 node wizard`
+* Provide configuration files, certificates, etc.
+  in `/data/etc/icinga2` and `/data/var/...` by yourself.
+  Consult the [Icinga 2 configuration documentation]
+  on which configuration files there are.
+* Provide environment variables as shown above.
 
-We will verify whether it makes sense to separate PHP FPM from the Icinga Web 2 container. This also includes the evaluation if it makes sense use the same container but start it with different parameters to allow separation.
+### Environment variables
 
-### Base Images
-We aim to provide as small images as possible containing only required software.
+Most of the following variables correspond to
+`icinga2 node setup` CLI parameters.
+If any of these is present and `icinga2 node setup`
+has not been run yet, it will run.
+Consult the [node command documentation] on what are which parameters for.
 
-We do not set any requirements regarding base images yet, since this needs some further investigation. There are opposing votes against using a CentOS base image because other distributions seem to provide bug and security fixes faster.
+Regular variables:
 
-For Icinga Web 2 we will verify the usage of Alpine Linux as base image.
+ Variable                                                 | Node setup CLI
+ ---------------------------------------------------------|--------------------
+ `ICINGA_ACCEPT_COMMANDS=1`                               | `--accept-commands`
+ `ICINGA_ACCEPT_CONFIG=1`                                 | `--accept-config`
+ `ICINGA_DISABLE_CONFD=1`                                 | `--disable-confd`
+ `ICINGA_MASTER=1`                                        | `--master`
+ `ICINGA_CN=icinga-master`                                | `--cn icinga-master`
+ `ICINGA_ENDPOINT=icinga-master,2001:db8::192.0.2.9,5665` | `--endpoint icinga-master,2001:db8::192.0.2.9,5665`
+ `ICINGA_GLOBAL_ZONES=global-config`                      | `--global_zones global-config`
+ `ICINGA_LISTEN=::,5665`                                  | `--listen ::,5665`
+ `ICINGA_PARENT_HOST=2001:db8::192.0.2.9,5665`            | `--parent_host 2001:db8::192.0.2.9,5665`
+ `ICINGA_PARENT_ZONE=master`                              | `--parent_zone master`
+ `ICINGA_TICKET=0123456789abcdef0123456789abcdef01234567` | `--ticket 0123456789abcdef0123456789abcdef01234567`
+ `ICINGA_ZONE=master`                                     | `--zone master`
 
-### Installation
-Icinga 2 should be installed through official packages. For Icinga Web there may be some advantages of cloning directly from GitHub, this has to be evaluated.
+Special variables:
 
-### Configuration
-For Icinga 2 the whole `/etc/icinga2` and `/var/lib/icinga2` directories should be documented to be used as volumes. The default files should contain sane defaults. Additionally, we want to have environment variable in order to run the container without mounting `/etc/icinga2`. This will result in bunch of variable that need to be documented well.
+* `ICINGA_TRUSTEDCERT`'s value is written to a temporary file
+  which is passed to `icinga2 node setup` via `--trustedcert`.
+* `ICINGA_CACERT`'s value is written to `/var/lib/icinga2/certs/ca.crt`.
 
-For Icinga Web 2 we will have to figure out a way of providing environment variables for some of the configurations as well (where it makes sense). The whole `/etc/icingaweb2` directory should be documented to be used as a volume.
-
-### Init System
-For Icinga 2 we do not need an init system, since Icinga 2 is capable of reloading its configuration without stopping the main process.
-
-For Icinga Web 2 we have to figure out if a system like `systemctl` is required, if a simple script can handle it, or if we don't need an init system at all.
-
-### Plugins
-We will make at least the official monitorig plugins available in the Icinga 2 containers. Users can extend the plugin set by using our Icinga 2 image as a base image and installing additional plugins on top. Additionally plugins can be made available through mount points.
-
-Another option that can be evaluated in the future is the possibility of having a separate image only for plugins. In this case Icinga 2 must be able to call those plugins remotely somehow. This is an early stage idea and would require furhter research.
-
-### Database Schema
-Our containers take care that the initial database schema is applied. On each start the container should check if an update is available and apply that as well.
-
-### Logs
-To make the logs available through the container engine we need to make sure to change the default logging output to stdout, respectively stderr.
-
-### Testing
-Testing must be implemented from the beginning. We'll have to research if there's any framework available that we can use. Otherwise we can use custom Makefiles in combination with docker-compose to test our images in different scenarios.
-
-### Build Platform
-This needs some further research to figure out what would work best for us. Available options include GitHub Actions, GitHub + TravisCI and GitLab CI/CD, but there may be other options as well.
-
-### Other Concerns
-Some other condcerns have been brought up that we should keep in mind. One is that long running containers (> 2 Weeks) may become stale and need a restart. It is unclear whether this is an Icinga issue or something else.
-
-Another concern is that networking can be a challenge when separating services into separate containers.
+[Icinga 2]: https://github.com/Icinga/icinga2
+[Docker]: https://www.docker.com
+[Icinga 2 configuration documentation]: https://icinga.com/docs/icinga2/latest/doc/04-configuration/
+[node command documentation]: https://icinga.com/docs/icinga2/latest/doc/11-cli-commands/#cli-command-node
