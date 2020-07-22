@@ -1,3 +1,5 @@
+# Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
+
 FROM golang:buster as entrypoint
 
 COPY entrypoint /entrypoint
