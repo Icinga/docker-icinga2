@@ -1,4 +1,5 @@
 #!/bin/bash
+# Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 set -exo pipefail
 
 I2SRC="$1"
