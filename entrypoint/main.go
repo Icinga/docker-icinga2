@@ -120,6 +120,31 @@ func entrypoint() error {
 				return errSt
 			}
 		}
+
+		logf(info, "Configuring features")
+
+		for _, env := range os.Environ() {
+			if kv := strings.SplitN(env, "=", 2); len(kv) == 2 {
+				if strings.HasPrefix(kv[0], "ICINGA_FEATURE_") {
+					if kv[0] = strings.TrimPrefix(kv[0], "ICINGA_FEATURE_"); len(kv[0]) > 0 {
+						kv[0] = strings.ToLower(strings.ReplaceAll(kv[0], "_", "-"))
+						logf(info, "Configuring feature: %#v", kv[0])
+
+						available := path.Join("/etc/icinga2/features-available", kv[0]+".conf")
+						if errWF := ioutil.WriteFile(available, []byte(kv[1]), 0750); errWF != nil {
+							return errWF
+						}
+
+						errSl := os.Symlink(available, path.Join("/etc/icinga2/features-enabled", kv[0]+".conf"))
+						if errSl != nil {
+							if le, ok := errSl.(*os.LinkError); !ok || !os.IsExist(le.Err) {
+								return errSl
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	path := os.Args[1]
