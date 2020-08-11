@@ -96,6 +96,17 @@ Special variables:
   which is passed to `icinga2 node setup` via `--trustedcert`.
 * `ICINGA_CACERT`'s value is written to `/var/lib/icinga2/certs/ca.crt`.
 
+## Build it yourself
+
+```bash
+git clone https://github.com/Icinga/icinga2.git
+#pushd icinga2
+#git checkout v2.12.0
+#popd
+
+./build.bash ./icinga2
+```
+
 [Icinga 2]: https://github.com/Icinga/icinga2
 [Docker]: https://www.docker.com
 [Icinga 2 configuration documentation]: https://icinga.com/docs/icinga2/latest/doc/04-configuration/
