@@ -3,6 +3,7 @@
 set -exo pipefail
 
 export PATH="/usr/lib/ccache:$PATH"
+ccache -z
 
 mkdir icinga2-bin
 mkdir build
@@ -20,3 +21,5 @@ make install "DESTDIR=$(pwd)/../icinga2-bin"
 cd ..
 
 rm icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
+
+ccache -s
