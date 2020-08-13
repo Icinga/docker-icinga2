@@ -27,7 +27,10 @@ mkimg () {
 	STATE_isPost=1 node /actions/checkout/dist/index.js
 
 	docker save "${TARGET}:$TAG" |gzip >docker-save.tgz
-	INPUT_NAME=docker-image INPUT_PATH=docker-save.tgz node /actions/upload-artifact/dist/index.js
+
+	INPUT_NAME=docker-image INPUT_PATH=docker-save.tgz INPUT_IF_NO_FILES_FOUND=error \
+		node /actions/upload-artifact/dist/index.js
+
 	rm docker-save.tgz
 }
 
