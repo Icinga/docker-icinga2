@@ -25,14 +25,6 @@ mkimg () {
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js
-
-	docker save "${TARGET}:$TAG" |gzip >docker-save.tgz
-
-	set +e
-	INPUT_NAME=docker-image INPUT_PATH=docker-save.tgz node /actions/upload-artifact/dist/index.js
-	set -e
-
-	rm docker-save.tgz
 }
 
 push () {
