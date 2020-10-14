@@ -45,7 +45,7 @@ case "$GITHUB_EVENT_NAME" in
 		;;
 	push)
 		grep -qEe '^refs/heads/.' <<<"$GITHUB_REF"
-		TAG="$(cut -d / -f 3- <<<"$GITHUB_REF")"
+		TAG="$(cut -d / -f 3- <<<"$GITHUB_REF" |tr / -)"
 		mkimg
 		push
 		;;
