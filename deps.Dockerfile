@@ -63,6 +63,9 @@ RUN ["/bin/bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteracti
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
+COPY --from=icinga/docker-chown /docker-chown /docker-chown
+RUN ["chmod", "06755", "/docker-chown"]
+
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "--uid", "5665", "icinga"]
 
 COPY --from=build /check_mssql_health/bin/ /
