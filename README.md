@@ -71,7 +71,7 @@ Most of the following variables correspond to
 `icinga2 node setup` CLI parameters.
 If any of these is present and `icinga2 node setup`
 has not been run yet, it will run.
-Consult the [node command documentation] on what are which parameters for.
+Consult the [node setup command documentation] on what are which parameters for.
 
 Regular variables:
 
@@ -110,4 +110,4 @@ git clone https://github.com/Icinga/icinga2.git
 [Icinga 2]: https://github.com/Icinga/icinga2
 [Docker]: https://www.docker.com
 [Icinga 2 configuration documentation]: https://icinga.com/docs/icinga2/latest/doc/04-configuration/
-[node command documentation]: https://icinga.com/docs/icinga2/latest/doc/11-cli-commands/#cli-command-node
+[node setup command documentation]: https://icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring/#node-setup
