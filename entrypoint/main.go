@@ -28,7 +28,8 @@ func main() {
 }
 
 func entrypoint() error {
-	if len(os.Args) < 2 {
+	command := os.Args[1:]
+	if len(command) < 1 {
 		logf(warning, "Nothing to do.")
 		return nil
 	}
@@ -120,9 +121,11 @@ func entrypoint() error {
 				return errSt
 			}
 		}
+
+		command = append([]string{"dumb-init", "-c", "--"}, command...)
 	}
 
-	path := os.Args[1]
+	path := command[0]
 	if filepath.Base(path) == path {
 		logf(info, "Looking up %#v in $PATH", path)
 
@@ -135,7 +138,7 @@ func entrypoint() error {
 	}
 
 	logf(info, "Running %#v", path)
-	return syscall.Exec(path, os.Args[1:], os.Environ())
+	return syscall.Exec(path, command, os.Environ())
 }
 
 type logSeverity uint8
