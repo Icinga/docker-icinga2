@@ -69,6 +69,10 @@ To notify by e-mail, provide an [msmtp configuration] - either
 by mounting the `/etc/msmtprc` file or by specifying the desired content
 of `~icinga/.msmtprc` via the environment variable `MSMTPRC`.
 
+**Don't mount volumes under `/data/etc/icinga2` or `/data/var/*/icinga2`**
+unless `/data` already contains all of these directories!
+Otherwise `/data` will stay incomplete, i.e. broken.
+
 ### Environment variables
 
 Most of the following variables correspond to
