@@ -61,6 +61,8 @@ FROM debian:buster-slim
 
 RUN ["/bin/bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y dumb-init libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins openssh-client openssl postfix; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
+RUN ["chmod", "ug+s", "/usr/lib/nagios/plugins/check_icmp"]
+
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "--uid", "5665", "icinga"]
