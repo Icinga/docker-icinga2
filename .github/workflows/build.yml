@@ -1,0 +1,22 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout HEAD
+        uses: actions/checkout@v1
+
+      - name: Icinga 2
+        run: git clone https://github.com/Icinga/icinga2.git
+
+      - name: Build
+        run: ./build.bash ./icinga2
