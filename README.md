@@ -65,6 +65,10 @@ To configure it, do one of the following:
   on which configuration files there are.
 * Provide environment variables as shown above.
 
+**Don't mount volumes under `/data/etc/icinga2` or `/data/var/*/icinga2`**
+unless `/data` already contains all of these directories!
+Otherwise `/data` will stay incomplete, i.e. broken.
+
 ### Environment variables
 
 Most of the following variables correspond to
