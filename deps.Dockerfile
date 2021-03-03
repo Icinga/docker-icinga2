@@ -59,7 +59,7 @@ RUN cd /check_postgres ;\
 
 FROM debian:buster-slim
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates dumb-init libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
