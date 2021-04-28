@@ -111,8 +111,15 @@ git clone https://github.com/Icinga/icinga2.git
 ./build.bash ./icinga2
 ```
 
+In order to run the script on macOS, [coreutils] must be installed:
+
+* Install [Homebrew]
+* Run `brew install coreutils`
+
 [Icinga 2]: https://github.com/Icinga/icinga2
 [Docker]: https://www.docker.com
 [Icinga 2 configuration documentation]: https://icinga.com/docs/icinga2/latest/doc/04-configuration/
 [msmtp configuration]: https://wiki.archlinux.org/index.php/Msmtp
 [node setup command documentation]: https://icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring/#node-setup
+[Homebrew]: https://brew.sh/
+[coreutils]: https://formulae.brew.sh/formula/coreutils
