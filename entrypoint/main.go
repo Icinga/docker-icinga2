@@ -19,6 +19,7 @@ import (
 
 const ca = "/var/lib/icinga2/certs/ca.crt"
 const crtMode = 0640
+const mSmtpRc = "/var/lib/icinga2/.msmtprc"
 
 func main() {
 	if err := entrypoint(); err != nil {
@@ -119,6 +120,14 @@ func entrypoint() error {
 				}
 			} else {
 				return errSt
+			}
+		}
+
+		if mSmtpCfg, ok := os.LookupEnv("MSMTPRC"); ok {
+			logf(info, "Writing %#v", mSmtpRc)
+
+			if errWF := ioutil.WriteFile(mSmtpRc, []byte(mSmtpCfg), 0644); errWF != nil {
+				return errWF
 			}
 		}
 

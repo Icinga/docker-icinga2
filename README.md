@@ -65,6 +65,10 @@ To configure it, do one of the following:
   on which configuration files there are.
 * Provide environment variables as shown above.
 
+To notify by e-mail, provide an [msmtp configuration] - either
+by mounting the `/etc/msmtprc` file or by specifying the desired content
+of `~icinga/.msmtprc` via the environment variable `MSMTPRC`.
+
 ### Environment variables
 
 Most of the following variables correspond to
@@ -107,7 +111,15 @@ git clone https://github.com/Icinga/icinga2.git
 ./build.bash ./icinga2
 ```
 
+In order to run the script on macOS, [coreutils] must be installed:
+
+* Install [Homebrew]
+* Run `brew install coreutils`
+
 [Icinga 2]: https://github.com/Icinga/icinga2
 [Docker]: https://www.docker.com
 [Icinga 2 configuration documentation]: https://icinga.com/docs/icinga2/latest/doc/04-configuration/
+[msmtp configuration]: https://wiki.archlinux.org/index.php/Msmtp
 [node setup command documentation]: https://icinga.com/docs/icinga2/latest/doc/06-distributed-monitoring/#node-setup
+[Homebrew]: https://brew.sh/
+[coreutils]: https://formulae.brew.sh/formula/coreutils
