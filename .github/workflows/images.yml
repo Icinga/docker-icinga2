@@ -1,0 +1,39 @@
+name: Docker images
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  images:
+    name: Docker image
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - Dockerfile: deps.Dockerfile
+            tag: icinga/icinga2-deps
+          - Dockerfile: action-base.Dockerfile
+            tag: icinga/icinga2-builder
+
+    steps:
+      - name: Checkout HEAD
+        uses: actions/checkout@v1
+
+      - name: docker build
+        run: 'docker build -f ${{ matrix.image.Dockerfile }} -t ${{ matrix.image.tag }} .'
+
+      - name: docker login
+        if: "github.event.ref == 'refs/heads/master'"
+        run: 'docker login -u icingaadmin --password-stdin <<<"$DOCKER_HUB_PASSWORD"'
+        shell: bash
+        env:
+          DOCKER_HUB_PASSWORD: '${{ secrets.DOCKER_HUB_PERSONAL_TOKEN }}'
+
+      - name: docker push
+        if: "github.event.ref == 'refs/heads/master'"
+        run: 'docker push ${{ matrix.image.tag }}'
