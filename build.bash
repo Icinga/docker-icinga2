@@ -15,8 +15,7 @@ fi
 I2SRC="$(realpath "$I2SRC")"
 BLDCTX="$(realpath "$(dirname "$0")")"
 
-docker build -f "${BLDCTX}/action-base.Dockerfile" -t icinga/icinga2-builder "$BLDCTX"
-docker build -f "${BLDCTX}/deps.Dockerfile" -t icinga/icinga2-deps "$BLDCTX"
+docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icinga2-builder "$BLDCTX"
 
 docker run --rm -i \
 	-v "${I2SRC}:/i2src:ro" \
@@ -31,5 +30,7 @@ cp -r /i2src/.git /i2cp
 cd /i2cp
 
 /bldctx/compile.bash
+
+cp -r /entrypoint .
 docker build -f /bldctx/Dockerfile -t icinga/icinga2 .
 EOF
