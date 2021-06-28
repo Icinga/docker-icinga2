@@ -20,8 +20,9 @@ mkimg () {
 	ln -vs "$(pwd)/ccache" ~/.ccache
 
 	/compile.bash
-
 	cache save
+
+	cp -r /entrypoint .
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js
