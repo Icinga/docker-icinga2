@@ -33,4 +33,5 @@ cd /i2cp
 
 cp -r /entrypoint .
 docker build -f /bldctx/Dockerfile -t icinga/icinga2 .
+docker run --rm icinga/icinga2 icinga2 daemon -C
 EOF
