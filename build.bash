@@ -32,4 +32,5 @@ cd /i2cp
 
 /bldctx/compile.bash
 docker build -f /bldctx/Dockerfile -t icinga/icinga2 .
+docker run --rm icinga/icinga2 icinga2 daemon -C
 EOF
