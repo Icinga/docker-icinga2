@@ -1,6 +1,6 @@
 # Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
-FROM golang:buster as entrypoint
+FROM golang:bullseye as entrypoint
 
 COPY entrypoint /entrypoint
 
@@ -22,7 +22,7 @@ RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
 	rm -rf *.git
 
 
-FROM debian:buster-slim as build
+FROM debian:bullseye-slim as build
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
@@ -57,9 +57,9 @@ RUN cd /check_postgres ;\
 	make install "DESTDIR=$(pwd)/bin"
 
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.67 libcap2-bin libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,program-options,regex,system,thread}1.74 libcap2-bin libedit2 libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
