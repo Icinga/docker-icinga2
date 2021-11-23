@@ -26,6 +26,8 @@ mkimg () {
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 	docker run --rm "${TARGET}:$TAG" icinga2 daemon -C
 
+	docker run --rm -i "${TARGET}:$TAG" icinga2 --version
+
 	STATE_isPost=1 node /actions/checkout/dist/index.js
 }
 
