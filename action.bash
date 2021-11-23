@@ -13,7 +13,7 @@ cache () {
 mkimg () {
 	test -n "$TAG"
 
-	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
+	env INPUT_FETCH-DEPTH=0 node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 	cache restore
 
 	mkdir -p ccache
