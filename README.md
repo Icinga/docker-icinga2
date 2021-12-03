@@ -99,6 +99,8 @@ Special variables:
 * `ICINGA_TRUSTEDCERT`'s value is written to a temporary file
   which is passed to `icinga2 node setup` via `--trustedcert`.
 * `ICINGA_CACERT`'s value is written to `/var/lib/icinga2/certs/ca.crt`.
+* `ICINGA_CERT`'s value is written to `/var/lib/icinga2/certs/*.crt` where `*` will either be replaced by the container hostname or the value of `ICINGA_CN`.
+* `ICINGA_CERTKEY`'s value is written to `/var/lib/icinga2/certs/*.key` where `*` will either be replaced by the container hostname or the value of `ICINGA_CN`.
 
 ## Build it yourself
 

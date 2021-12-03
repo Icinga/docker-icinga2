@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const ca = "/var/lib/icinga2/certs/ca.crt"
+const cert_dir = "/var/lib/icinga2/certs/"
 const crtMode = 0640
 const mSmtpRc = "/var/lib/icinga2/.msmtprc"
 
@@ -47,7 +47,7 @@ func entrypoint() error {
 					src := path.Join("/data-init", dir, "icinga2")
 					logf(info, "Copying %#v to %#v", src, dest)
 
-					if errMA := os.MkdirAll(path.Dir(dest), 0755); errMA != nil {
+					if errMA := os.MkdirAll(path.Dir(dest), 0775); errMA != nil {
 						return errMA
 					}
 
@@ -60,9 +60,9 @@ func entrypoint() error {
 			}
 		}
 
-		logf(info, "Checking %#v", ca)
+		logf(info, "Checking %#v", path.Join(cert_dir, "ca.crt"))
 
-		if _, errSt := os.Stat(ca); errSt != nil {
+		if _, errSt := os.Stat(path.Join(cert_dir, "ca.crt")); errSt != nil {
 			if os.IsNotExist(errSt) {
 				nodeSetup := []string{"node", "setup"}
 				runNodeSetup := false
@@ -99,7 +99,7 @@ func entrypoint() error {
 								logf(info, "Writing CA certificate")
 								runNodeSetup = true
 
-								if errWF := ioutil.WriteFile(ca, []byte(kv[1]), crtMode); errWF != nil {
+								if errWF := ioutil.WriteFile(path.Join(cert_dir, "ca.crt"), []byte(kv[1]), crtMode); errWF != nil {
 									return errWF
 								}
 							}
@@ -116,6 +116,38 @@ func entrypoint() error {
 
 					if errRn := cmd.Run(); errRn != nil {
 						return errRn
+					}
+
+					keyVal, keyPresent := os.LookupEnv("ICINGA_CERTKEY")
+					certVal, certPresent := os.LookupEnv("ICINGA_CERT")
+					val, present := os.LookupEnv("ICINGA_CN")
+					if !keyPresent {
+						logf(warning, "Skipping creation of certificate cert file as ICINGA_CERTKEY variable is missing")
+					} else if !certPresent {
+						logf(warning, "Skipping creation of certificate key file as ICINGA_CERT variable is missing")
+					} else if keyPresent && certPresent {
+						if present {
+							logf(info, "Writing certificate cert using ICINGA_CN value")
+							if errWF := ioutil.WriteFile(path.Join(cert_dir, fmt.Sprintf("%s.crt", val)), []byte(certVal), crtMode); errWF != nil {
+								return errWF
+							}
+							if errWF := ioutil.WriteFile(path.Join(cert_dir, fmt.Sprintf("%s.key", val)), []byte(keyVal), crtMode); errWF != nil {
+								return errWF
+							}
+						} else {
+							logf(info, "Writing certificate cert using container hostname")
+							hostname, err := os.Hostname()
+							if err != nil {
+								logf(warning, "Could not get hostname")
+							} else {
+								if errWF := ioutil.WriteFile(path.Join(cert_dir, fmt.Sprintf("%s.crt", hostname)), []byte(certVal), crtMode); errWF != nil {
+									return errWF
+								}
+								if errWF := ioutil.WriteFile(path.Join(cert_dir, fmt.Sprintf("%s.key", hostname)), []byte(keyVal), crtMode); errWF != nil {
+									return errWF
+								}
+							}
+						}
 					}
 				}
 			} else {
