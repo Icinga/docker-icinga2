@@ -39,14 +39,14 @@ RUN cd /check_mssql_health ;\
 	mkdir bin ;\
 	autoconf ;\
 	autoreconf ;\
-	./configure --libexecdir=/usr/lib/nagios/plugins ;\
+	./configure "--build=$(uname -m)-unknown-linux-gnu" --libexecdir=/usr/lib/nagios/plugins ;\
 	make ;\
 	make install "DESTDIR=$(pwd)/bin"
 
 RUN cd /check_nwc_health ;\
 	mkdir bin ;\
 	autoreconf ;\
-	./configure --libexecdir=/usr/lib/nagios/plugins ;\
+	./configure "--build=$(uname -m)-unknown-linux-gnu" --libexecdir=/usr/lib/nagios/plugins ;\
 	make ;\
 	make install "DESTDIR=$(pwd)/bin"
 

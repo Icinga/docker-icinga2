@@ -15,6 +15,11 @@ jobs:
       - name: Checkout HEAD
         uses: actions/checkout@v1
 
+      - name: QEMU
+        run: sudo apt-get install -y qemu-user-static binfmt-support
+
+      - run: docker buildx create --use
+
       - name: Icinga 2
         run: git clone https://github.com/Icinga/icinga2.git
 

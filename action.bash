@@ -9,6 +9,7 @@ mkimg () {
 
 	env INPUT_FETCH-DEPTH=0 node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 
+	docker buildx create --use
 	/docker-icinga2/build.bash .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js

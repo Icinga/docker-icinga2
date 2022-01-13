@@ -14,6 +14,7 @@ FROM docker
 
 RUN ["apk", "add", "--no-cache", "bash", "git", "nodejs", "perl"]
 COPY --from=clone /actions /actions
+COPY --from=docker/buildx-bin /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 ADD . /docker-icinga2
 
 CMD ["/docker-icinga2/action.bash"]
