@@ -14,24 +14,12 @@ fi
 
 I2SRC="$(realpath "$I2SRC")"
 BLDCTX="$(realpath "$(dirname "$0")")"
+TMPBLDCTX="$(mktemp -d)"
 
-docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icinga2-builder "$BLDCTX"
+trap "rm -rf $TMPBLDCTX" EXIT
 
-docker run --rm -i \
-	-v "${I2SRC}:/i2src:ro" \
-	-v "${BLDCTX}:/bldctx:ro" \
-	-v "$(printf %s ~/.ccache):/root/.ccache" \
-	-v /var/run/docker.sock:/var/run/docker.sock \
-	icinga/icinga2-builder bash <<EOF
-set -exo pipefail
+cp -a "${BLDCTX}/." "$TMPBLDCTX"
+git clone "file://${I2SRC}/.git" "${TMPBLDCTX}/icinga2-src"
 
-git -C /i2src archive --prefix=i2cp/ HEAD |tar -xC /
-cp -r /i2src/.git /i2cp
-cd /i2cp
-
-/bldctx/compile.bash
-
-cp -r /entrypoint .
-docker build -f /bldctx/Dockerfile -t icinga/icinga2 .
+docker build -f "${TMPBLDCTX}/Dockerfile" -t icinga/icinga2 "$TMPBLDCTX"
 docker run --rm icinga/icinga2 icinga2 daemon -C
-EOF

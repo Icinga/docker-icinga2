@@ -4,27 +4,12 @@ set -exo pipefail
 
 TARGET=icinga/icinga2
 
-cache () {
-	INPUT_KEY=docker-image/ccache INPUT_PATH=ccache \
-		STATE_CACHE_KEY=1 STATE_CACHE_RESULT=2 \
-		node "/actions/cache/dist/${1}/index.js"
-}
-
 mkimg () {
 	test -n "$TAG"
 
 	env INPUT_FETCH-DEPTH=0 node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
-	cache restore
 
-	mkdir -p ccache
-	ln -vs "$(pwd)/ccache" ~/.ccache
-
-	/compile.bash
-	cache save
-
-	cp -r /entrypoint .
-	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
-	docker run --rm "${TARGET}:$TAG" icinga2 daemon -C
+	/docker-icinga2/build.bash .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js
 }
@@ -34,6 +19,7 @@ push () {
 
 	if [ "$(tr -d '\n' <<<"$DOCKER_HUB_PASSWORD" |wc -c)" -gt 0 ]; then
 		docker login -u icingaadmin --password-stdin <<<"$DOCKER_HUB_PASSWORD"
+		docker tag "$TARGET" "${TARGET}:$TAG"
 		docker push "${TARGET}:$TAG"
 		docker logout
 	fi

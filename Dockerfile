@@ -8,7 +8,7 @@ WORKDIR /entrypoint
 RUN ["go", "build", "."]
 
 
-FROM buildpack-deps:scm as clone
+FROM buildpack-deps:scm as clone-plugins
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
@@ -22,7 +22,7 @@ RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
 	rm -rf *.git
 
 
-FROM debian:bullseye-slim as build
+FROM debian:bullseye-slim as build-plugins
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
@@ -31,9 +31,9 @@ RUN apt-get update ;\
 	apt-get clean ;\
 	rm -vrf /var/lib/apt/lists/*
 
-COPY --from=clone /check_mssql_health /check_mssql_health
-COPY --from=clone /check_nwc_health /check_nwc_health
-COPY --from=clone /check_postgres /check_postgres
+COPY --from=clone-plugins /check_mssql_health /check_mssql_health
+COPY --from=clone-plugins /check_nwc_health /check_nwc_health
+COPY --from=clone-plugins /check_postgres /check_postgres
 
 RUN cd /check_mssql_health ;\
 	mkdir bin ;\
@@ -54,7 +54,41 @@ RUN cd /check_postgres ;\
 	mkdir bin ;\
 	perl Makefile.PL INSTALLSITESCRIPT=/usr/lib/nagios/plugins ;\
 	make ;\
-	make install "DESTDIR=$(pwd)/bin"
+	make install "DESTDIR=$(pwd)/bin" ;\
+	rm -rf bin/usr/local/man
+	# Otherwise: cannot copy to non-directory: /var/lib/docker/overlay2/r1tfzp762j3qxieib2fy3230x/merged/usr/local/man
+
+
+FROM debian:bullseye-slim as build-icinga2
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+RUN apt-get update ;\
+	apt-get install --no-install-{recommends,suggests} -y \
+		bison cmake flex g++ git \
+		libboost{,-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,test,thread}}1.74-dev \
+		libedit-dev libmariadb-dev libpq-dev libssl-dev make ;\
+	apt-get clean ;\
+	rm -vrf /var/lib/apt/lists/*
+
+COPY icinga2-src/.git /icinga2-src/.git
+RUN git -C /icinga2-src checkout .
+
+RUN mkdir /icinga2-bin
+RUN mkdir /icinga2-build
+WORKDIR /icinga2-build
+
+RUN cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run -DICINGA2_LTO_BUILD=ON \
+	-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF /icinga2-src
+
+RUN make
+RUN make test
+RUN make install DESTDIR=/icinga2-bin
+RUN rm /icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
+
+RUN strip -g /icinga2-bin/usr/lib/*/icinga2/sbin/icinga2
+RUN strip -g /icinga2-bin/usr/lib/nagios/plugins/check_nscp_api
+RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 
 FROM debian:bullseye-slim
@@ -65,14 +99,14 @@ COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "--uid", "5665", "icinga"]
 
-COPY --from=build /check_mssql_health/bin/ /
-COPY --from=build /check_nwc_health/bin/ /
-COPY --from=build /check_postgres/bin/ /
-COPY --from=clone /check_ssl_cert/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
+COPY --from=build-plugins /check_mssql_health/bin/ /
+COPY --from=build-plugins /check_nwc_health/bin/ /
+COPY --from=build-plugins /check_postgres/bin/ /
+COPY --from=clone-plugins /check_ssl_cert/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 
 ENTRYPOINT ["/entrypoint"]
 
-COPY icinga2-bin/ /
+COPY --from=build-icinga2 /icinga2-bin/ /
 
 RUN ["install", "-o", "icinga", "-g", "icinga", "-d", "/data"]
 RUN ["bash", "-exo", "pipefail", "-c", "for d in /etc/icinga2 /var/*/icinga2; do mkdir -p $(dirname /data-init$d); mv $d /data-init$d; ln -vs /data$d $d; done"]
