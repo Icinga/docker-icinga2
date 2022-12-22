@@ -17,6 +17,7 @@ make
 make test
 
 make install "DESTDIR=$(pwd)/../icinga2-bin"
+strip -g ../icinga2-bin/usr/lib/*/icinga2/sbin/icinga2
 
 cd ..
 
