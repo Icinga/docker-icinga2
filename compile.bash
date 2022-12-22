@@ -19,6 +19,7 @@ make test
 make install "DESTDIR=$(pwd)/../icinga2-bin"
 strip -g ../icinga2-bin/usr/lib/*/icinga2/sbin/icinga2
 strip -g ../icinga2-bin/usr/lib/nagios/plugins/check_nscp_api
+rm -rf ../icinga2-bin/usr/share/doc/icinga2/markdown
 
 cd ..
 
