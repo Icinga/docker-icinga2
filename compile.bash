@@ -10,13 +10,16 @@ mkdir build
 cd build
 
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
-	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run \
+	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run -DICINGA2_LTO_BUILD=ON \
 	-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF ..
 
 make
 make test
 
 make install "DESTDIR=$(pwd)/../icinga2-bin"
+strip -g ../icinga2-bin/usr/lib/*/icinga2/sbin/icinga2
+strip -g ../icinga2-bin/usr/lib/nagios/plugins/check_nscp_api
+rm -rf ../icinga2-bin/usr/share/doc/icinga2/markdown
 
 cd ..
 
