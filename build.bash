@@ -32,5 +32,3 @@ cp -a "${BLDCTX}/." "$TMPBLDCTX"
 git clone "file://${I2SRC}/.git" "${TMPBLDCTX}/icinga2-src"
 
 docker buildx build --platform "$(echo linux/{amd64,arm{/v7,64/v8}} |tr ' ' ,)" -f "${TMPBLDCTX}/Dockerfile" -t icinga/icinga2 "$TMPBLDCTX"
-
-docker run --rm icinga/icinga2 icinga2 daemon -C

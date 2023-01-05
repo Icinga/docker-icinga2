@@ -91,7 +91,7 @@ RUN strip -g /icinga2-bin/usr/lib/nagios/plugins/check_nscp_api
 RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim as icinga2
 
 RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
@@ -114,3 +114,10 @@ RUN ["bash", "-exo", "pipefail", "-c", "for d in /etc/icinga2 /var/*/icinga2; do
 EXPOSE 5665
 USER icinga
 CMD ["icinga2", "daemon"]
+
+
+FROM icinga2 as test-icinga2
+RUN ["icinga2", "daemon", "-C"]
+
+
+FROM icinga2
