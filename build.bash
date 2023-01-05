@@ -4,6 +4,7 @@ set -exo pipefail
 
 I2SRC="$1"
 TODO="$2"
+TAG="${3:-test}"
 
 if [ -z "$I2SRC" ]; then
 	cat <<EOF >&2
@@ -26,7 +27,7 @@ fi
 I2SRC="$(realpath "$I2SRC")"
 BLDCTX="$(realpath "$(dirname "$0")")"
 TMPBLDCTX="$(mktemp -d)"
-COMMON_ARGS=(-f "${TMPBLDCTX}/Dockerfile" -t icinga/icinga2 "$TMPBLDCTX")
+COMMON_ARGS=(-f "${TMPBLDCTX}/Dockerfile" -t "icinga/icinga2:$TAG" "$TMPBLDCTX")
 BUILDX=(docker buildx build --platform "$(echo linux/{amd64,arm{/v7,64/v8}} |tr ' ' ,)")
 
 trap "rm -rf $TMPBLDCTX" EXIT
