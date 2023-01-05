@@ -3,6 +3,7 @@
 set -exo pipefail
 
 I2SRC="$1"
+TODO="$2"
 
 if [ -z "$I2SRC" ]; then
 	cat <<EOF >&2
@@ -25,10 +26,22 @@ fi
 I2SRC="$(realpath "$I2SRC")"
 BLDCTX="$(realpath "$(dirname "$0")")"
 TMPBLDCTX="$(mktemp -d)"
+COMMON_ARGS=(-f "${TMPBLDCTX}/Dockerfile" -t icinga/icinga2 "$TMPBLDCTX")
+BUILDX=(docker buildx build --platform "$(echo linux/{amd64,arm{/v7,64/v8}} |tr ' ' ,)")
 
 trap "rm -rf $TMPBLDCTX" EXIT
 
 cp -a "${BLDCTX}/." "$TMPBLDCTX"
 git clone "file://${I2SRC}/.git" "${TMPBLDCTX}/icinga2-src"
 
-docker buildx build --platform "$(echo linux/{amd64,arm{/v7,64/v8}} |tr ' ' ,)" -f "${TMPBLDCTX}/Dockerfile" -t icinga/icinga2 "$TMPBLDCTX"
+case "$TODO" in
+	all)
+		"${BUILDX[@]}" "${COMMON_ARGS[@]}"
+		;;
+	push)
+		"${BUILDX[@]}" --push "${COMMON_ARGS[@]}"
+		;;
+	*)
+		docker build "${COMMON_ARGS[@]}"
+		;;
+esac
