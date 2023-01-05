@@ -27,7 +27,7 @@ runs:
     - if: github.event_name == 'release'
       name: Build and push tag
       shell: bash
-      run: '${{ github.action_path }}/build.bash' . push "$(tr -d v <<<'${{ github.ref_name }}')"
+      run: '${{ github.action_path }}/build.bash' . all
 
     - if: github.event_name == 'push'
       name: Build and push branch
