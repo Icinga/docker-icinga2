@@ -43,6 +43,6 @@ case "$ACTION" in
 		"${BUILDX[@]}" --push "${COMMON_ARGS[@]}"
 		;;
 	*)
-		docker build "${COMMON_ARGS[@]}"
+		docker buildx build --load "${COMMON_ARGS[@]}"
 		;;
 esac
