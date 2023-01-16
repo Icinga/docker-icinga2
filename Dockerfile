@@ -67,6 +67,7 @@ RUN apt-get update ;\
 		bison cmake flex g++ git \
 		libboost{,-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,test,thread}}1.74-dev \
 		libedit-dev libmariadb-dev libpq-dev libssl-dev make ;\
+	apt-get install --no-install-{recommends,suggests} -y ccache ;\
 	apt-get clean ;\
 	rm -vrf /var/lib/apt/lists/*
 
@@ -77,11 +78,11 @@ RUN mkdir /icinga2-bin
 RUN mkdir /icinga2-build
 WORKDIR /icinga2-build
 
-RUN cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+RUN PATH="/usr/lib/ccache:$PATH" cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
 	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run -DICINGA2_LTO_BUILD=ON \
 	-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF /icinga2-src
 
-RUN make
+RUN --mount=type=cache,target=/root/.ccache make
 RUN make test
 RUN make install DESTDIR=/icinga2-bin
 RUN rm /icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
