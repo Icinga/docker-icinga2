@@ -71,7 +71,7 @@ RUN apt-get update ;\
 	apt-get clean ;\
 	rm -vrf /var/lib/apt/lists/*
 
-COPY icinga2-src/.git /icinga2-src/.git
+COPY --from=icinga2-git . /icinga2-src/.git
 RUN git -C /icinga2-src checkout .
 
 RUN mkdir /icinga2-bin
