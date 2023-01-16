@@ -3,7 +3,7 @@
 set -exo pipefail
 
 I2SRC="$1"
-TODO="$2"
+ACTION="$2"
 TAG="${3:-test}"
 
 if [ -z "$I2SRC" ]; then
@@ -35,7 +35,7 @@ trap "rm -rf $TMPBLDCTX" EXIT
 cp -a "${BLDCTX}/." "$TMPBLDCTX"
 git clone "file://${I2SRC}/.git" "${TMPBLDCTX}/icinga2-src"
 
-case "$TODO" in
+case "$ACTION" in
 	all)
 		"${BUILDX[@]}" "${COMMON_ARGS[@]}"
 		;;
