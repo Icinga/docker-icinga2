@@ -24,9 +24,9 @@ if ! docker buildx version; then
 	false
 fi
 
-COMMON_ARGS=(-t "icinga/icinga2:$TAG" --build-context "icinga2-git=$(realpath "$I2SRC")/.git" "$(realpath "$(dirname "$0")")")
-
-BUILDX=(docker buildx build --platform "$(echo linux/{amd64,arm{/v7,64/v8}} |tr ' ' ,)")
+OUR_DIR="$(realpath "$(dirname "$0")")"
+COMMON_ARGS=(-t "icinga/icinga2:$TAG" --build-context "icinga2-git=$(realpath "$I2SRC")/.git" "$OUR_DIR")
+BUILDX=(docker buildx build --platform "$(cat "${OUR_DIR}/platforms.txt")")
 
 case "$ACTION" in
 	all)

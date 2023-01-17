@@ -26,6 +26,7 @@ runs:
       shell: bash
       run: |
         '${{ github.action_path }}/build.bash' . push "$(tr -d v <<<'${{ github.ref_name }}')"
+        '${{ github.action_path }}/mktags.bash' '${{ github.ref_name }}'
 
     - if: github.event_name == 'push'
       shell: bash
