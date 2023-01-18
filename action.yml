@@ -1,6 +1,39 @@
 # Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
 name: Icinga 2 Docker image
+inputs:
+  dockerhub-token:
+    default: ''
 runs:
-  using: docker
-  image: action.Dockerfile
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+
+    - shell: bash
+      run: sudo apt-get install -y qemu-user-static binfmt-support
+
+    - shell: bash
+      run: docker buildx create --use
+
+    - if: inputs.dockerhub-token != ''
+      env:
+        PW: ${{ inputs.dockerhub-token }}
+      shell: bash
+      run: |
+        docker login -u icingaadmin --password-stdin <<<"$PW"
+
+    - if: github.event_name == 'release'
+      shell: bash
+      run: |
+        '${{ github.action_path }}/build.bash' . push "$(tr -d v <<<'${{ github.ref_name }}')"
+        '${{ github.action_path }}/mktags.bash' '${{ github.ref_name }}'
+
+    - if: github.event_name == 'push'
+      shell: bash
+      run: |
+        '${{ github.action_path }}/build.bash' . push '${{ github.ref_name }}'
+
+    - if: github.event_name != 'release' && github.event_name != 'push'
+      shell: bash
+      run: |
+        '${{ github.action_path }}/build.bash' . all

@@ -1,4 +1,0 @@
-# Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
-
-deb http://deb.debian.org/debian bullseye-backports main
-deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable

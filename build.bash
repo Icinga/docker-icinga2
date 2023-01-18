@@ -3,6 +3,8 @@
 set -exo pipefail
 
 I2SRC="$1"
+ACTION="$2"
+TAG="${3:-test}"
 
 if [ -z "$I2SRC" ]; then
 	cat <<EOF >&2
@@ -12,26 +14,28 @@ EOF
 	false
 fi
 
-I2SRC="$(realpath "$I2SRC")"
-BLDCTX="$(realpath "$(dirname "$0")")"
+if ! docker version; then
+	echo 'Docker not found' >&2
+	false
+fi
 
-docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icinga2-builder "$BLDCTX"
+if ! docker buildx version; then
+	echo '"docker buildx" not found (see https://docs.docker.com/buildx/working-with-buildx/ )' >&2
+	false
+fi
 
-docker run --rm -i \
-	-v "${I2SRC}:/i2src:ro" \
-	-v "${BLDCTX}:/bldctx:ro" \
-	-v "$(printf %s ~/.ccache):/root/.ccache" \
-	-v /var/run/docker.sock:/var/run/docker.sock \
-	icinga/icinga2-builder bash <<EOF
-set -exo pipefail
+OUR_DIR="$(realpath "$(dirname "$0")")"
+COMMON_ARGS=(-t "icinga/icinga2:$TAG" --build-context "icinga2-git=$(realpath "$I2SRC")/.git" "$OUR_DIR")
+BUILDX=(docker buildx build --platform "$(cat "${OUR_DIR}/platforms.txt")")
 
-git -C /i2src archive --prefix=i2cp/ HEAD |tar -xC /
-cp -r /i2src/.git /i2cp
-cd /i2cp
-
-/bldctx/compile.bash
-
-cp -r /entrypoint .
-docker build -f /bldctx/Dockerfile -t icinga/icinga2 .
-docker run --rm icinga/icinga2 icinga2 daemon -C
-EOF
+case "$ACTION" in
+	all)
+		"${BUILDX[@]}" "${COMMON_ARGS[@]}"
+		;;
+	push)
+		"${BUILDX[@]}" --push "${COMMON_ARGS[@]}"
+		;;
+	*)
+		docker buildx build --load "${COMMON_ARGS[@]}"
+		;;
+esac
