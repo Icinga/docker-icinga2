@@ -17,6 +17,7 @@ import (
 	"time"
 )
 
+const icingaUid = 5665
 const dataVolume = "/data"
 const ca = "/var/lib/icinga2/certs/ca.crt"
 const crtMode = 0640
@@ -34,6 +35,24 @@ func entrypoint() error {
 	if len(command) < 1 {
 		logf(warning, "Nothing to do.")
 		return nil
+	}
+
+	if os.Getuid() == 0 {
+		logf(info, "Giving %s to the icinga user as we're root", dataVolume)
+
+		if err := os.Chown(dataVolume, icingaUid, icingaUid); err != nil {
+			return err
+		}
+
+		logf(info, "Dropping privileges as we're root")
+
+		if err := syscall.Setgid(icingaUid); err != nil {
+			return err
+		}
+
+		if err := syscall.Setuid(icingaUid); err != nil {
+			return err
+		}
 	}
 
 	if os.Getpid() == 1 {
