@@ -17,6 +17,7 @@ import (
 	"time"
 )
 
+const dataVolume = "/data"
 const ca = "/var/lib/icinga2/certs/ca.crt"
 const crtMode = 0640
 const mSmtpRc = "/var/lib/icinga2/.msmtprc"
@@ -36,10 +37,10 @@ func entrypoint() error {
 	}
 
 	if os.Getpid() == 1 {
-		logf(info, "Initializing /data as we're the init process (PID 1)")
+		logf(info, "Initializing %s as we're the init process (PID 1)", dataVolume)
 
 		for _, dir := range []string{"etc", "var/cache", "var/lib", "var/log", "var/run", "var/spool"} {
-			dest := path.Join("/data", dir, "icinga2")
+			dest := path.Join(dataVolume, dir, "icinga2")
 			logf(info, "Checking %#v", dest)
 
 			if _, errSt := os.Stat(dest); errSt != nil {
