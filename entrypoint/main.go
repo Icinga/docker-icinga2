@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/otiai10/copy"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -40,7 +41,14 @@ func entrypoint() error {
 	if os.Getuid() == 0 {
 		logf(info, "Giving %s to the icinga user as we're root", dataVolume)
 
-		if err := os.Chown(dataVolume, icingaUid, icingaUid); err != nil {
+		err := filepath.WalkDir(dataVolume, func(path string, _ fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			return os.Lchown(path, icingaUid, icingaUid)
+		})
+		if err != nil {
 			return err
 		}
 
