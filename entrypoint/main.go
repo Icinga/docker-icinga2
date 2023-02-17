@@ -41,16 +41,18 @@ func entrypoint() error {
 	if os.Getuid() == 0 {
 		logf(info, "Giving %s to the icinga user as we're root", dataVolume)
 
-		err := filepath.WalkDir(dataVolume, func(path string, _ fs.DirEntry, err error) error {
-			if err != nil {
-				return err
+		_ = filepath.WalkDir(dataVolume, func(path string, _ fs.DirEntry, err error) error {
+			if err == nil {
+				err = os.Lchown(path, icingaUid, icingaUid)
 			}
 
-			return os.Lchown(path, icingaUid, icingaUid)
+			if err != nil {
+				logf(warning, "Can't chown %s: %s", path, err.Error())
+				return filepath.SkipDir
+			}
+
+			return nil
 		})
-		if err != nil {
-			return err
-		}
 
 		logf(info, "Dropping privileges as we're root")
 
