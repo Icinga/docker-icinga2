@@ -35,7 +35,7 @@ runs:
     - if: github.event_name == 'push'
       shell: bash
       run: |
-        '${{ github.action_path }}/build.bash' . push '${{ github.ref_name }}'
+        '${{ github.action_path }}/build.bash' . push "$(tr / - <<<'${{ github.ref_name }}')"
 
     - if: github.event_name != 'release' && github.event_name != 'push'
       shell: bash
