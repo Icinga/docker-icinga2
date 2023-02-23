@@ -94,7 +94,7 @@ RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 FROM debian:bullseye-slim as icinga2
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; DEBIAN_FRONTEND=noninteractive apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils monitoring-plugins msmtp{,-mta} openssh-client openssl; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
