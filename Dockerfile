@@ -116,4 +116,4 @@ EXPOSE 5665
 USER icinga
 CMD ["icinga2", "daemon"]
 
-RUN ["icinga2", "daemon", "-C"]
+RUN --mount=type=cache,target=/data,uid=5665 ["/entrypoint", "icinga2", "daemon", "-C"]
