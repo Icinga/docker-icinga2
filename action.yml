@@ -10,6 +10,9 @@ runs:
     - uses: actions/checkout@v3
 
     - shell: bash
+      run: sudo apt-get update
+
+    - shell: bash
       run: sudo apt-get install -y qemu-user-static binfmt-support
 
     - shell: bash
