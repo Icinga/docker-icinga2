@@ -15,6 +15,9 @@ jobs:
       - name: Checkout HEAD
         uses: actions/checkout@v1
 
+      - shell: bash
+        run: sudo apt-get update
+
       - name: QEMU
         run: sudo apt-get install -y qemu-user-static binfmt-support
 
