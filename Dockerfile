@@ -79,7 +79,7 @@ RUN mkdir /icinga2-build
 WORKDIR /icinga2-build
 
 RUN PATH="/usr/lib/ccache:$PATH" cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc \
-	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run -DICINGA2_LTO_BUILD=ON \
+	-DCMAKE_INSTALL_LOCALSTATEDIR=/var -DICINGA2_RUNDIR=/run \
 	-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF /icinga2-src
 
 RUN --mount=type=cache,target=/root/.ccache make
