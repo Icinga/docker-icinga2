@@ -3,12 +3,12 @@
 set -exo pipefail
 
 I2SRC="$1"
-ACTION="$2"
+ACTION="${2:-local}"
 TAG="${3:-test}"
 
 if [ -z "$I2SRC" ]; then
 	cat <<EOF >&2
-Usage: ${0} /icinga2/source/dir
+Usage: ${0} /icinga2/source/dir [local|all|push [TAG]]
 EOF
 
 	false
