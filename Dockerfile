@@ -83,7 +83,7 @@ RUN PATH="/usr/lib/ccache:$PATH" cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTA
 	-DICINGA2_SYSCONFIGFILE=/etc/sysconfig/icinga2 -DICINGA2_WITH_{COMPAT,LIVESTATUS}=OFF /icinga2-src
 
 RUN --mount=type=cache,target=/root/.ccache make
-RUN make test
+RUN CTEST_OUTPUT_ON_FAILURE=1 make test
 RUN make install DESTDIR=/icinga2-bin
 RUN rm /icinga2-bin/etc/icinga2/features-enabled/mainlog.conf
 
