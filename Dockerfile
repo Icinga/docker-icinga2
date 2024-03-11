@@ -113,7 +113,6 @@ RUN ["install", "-o", "icinga", "-g", "icinga", "-d", "/data"]
 RUN ["bash", "-exo", "pipefail", "-c", "for d in /etc/icinga2 /var/*/icinga2; do mkdir -p $(dirname /data-init$d); mv $d /data-init$d; ln -vs /data$d $d; done"]
 
 EXPOSE 5665
-USER icinga
 CMD ["icinga2", "daemon"]
 
 
