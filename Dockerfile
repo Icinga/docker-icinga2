@@ -18,7 +18,7 @@ RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
 	git clone --bare https://github.com/bucardo/check_postgres.git ;\
 	git -C check_postgres.git archive --prefix=check_postgres/ 58de936fdfe4073413340cbd9061aa69099f1680 |tar -x ;\
 	git clone --bare https://github.com/matteocorti/check_ssl_cert.git ;\
-	git -C check_ssl_cert.git archive --prefix=check_ssl_cert/ 1e72259a9c1cd8c60e229725293c51e03c3ba814 |tar -x ;\
+	git -C check_ssl_cert.git archive --prefix=check_ssl_cert/ 341b5813108fb2367ada81e866da989ea4fb29e7 |tar -x ;\
 	rm -rf *.git
 
 
@@ -94,7 +94,7 @@ RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 FROM debian:bullseye-slim as icinga2
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y ca-certificates curl dumb-init libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
