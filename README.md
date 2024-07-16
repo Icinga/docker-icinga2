@@ -72,6 +72,13 @@ of `~icinga/.msmtprc` via the environment variable `MSMTPRC`.
 **Don't mount volumes under `/data/etc/icinga2` or `/data/var/*/icinga2`**
 unless `/data` already contains all of these directories!
 Otherwise `/data` will stay incomplete, i.e. broken.
+Instead mount any of the following directories:
+
+* `/conf.d`
+* `/constants.conf`
+* `/features-enabled`
+* `/zones.conf`
+* `/zones.d`
 
 ### Environment variables
 
