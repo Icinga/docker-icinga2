@@ -6,74 +6,132 @@ This image integrates [Icinga 2] into your [Docker] environment.
 
 ## Usage
 
-```bash
-docker network create icinga
-
-# CA
-docker run --rm \
-	-h icinga-master \
-	-v icinga-master:/data \
-	-e ICINGA_MASTER=1 \
-	icinga/icinga2 \
-	cat /var/lib/icinga2/certs/ca.crt > icinga-ca.crt
-
-# Ticket
-docker run --rm \
-	-h icinga-master \
-	-v icinga-master:/data \
-	-e ICINGA_MASTER=1 \
-	icinga/icinga2 \
-	icinga2 daemon -C
-docker run --rm \
-	-h icinga-master \
-	-v icinga-master:/data \
-	-e ICINGA_MASTER=1 \
-	icinga/icinga2 \
-	icinga2 pki ticket --cn icinga-agent > icinga-agent.ticket
-
-# Master
-docker run --rm -d \
-	--network icinga \
-	--name icinga-master \
-	-h icinga-master \
-	-p 5665:5665 \
-	-v icinga-master:/data \
-	-e ICINGA_MASTER=1 \
-	icinga/icinga2
-
-# Agent
-docker run --rm -d \
-	--network icinga \
-	-h icinga-agent \
-	-v icinga-agent:/data \
-	-e ICINGA_ZONE=icinga-agent \
-	-e ICINGA_ENDPOINT=icinga-master,icinga-master,5665 \
-	-e ICINGA_CACERT="$(< icinga-ca.crt)" \
-	-e ICINGA_TICKET="$(< icinga-agent.ticket)" \
-	icinga/icinga2
-```
-
-The container may listen on port 5665 and expects
+An `icinga/icinga2` container may listen on port 5665 and expects
 a volume on `/data` and a specific persistent hostname.
 To configure it, do one of the following:
 
-* Run the node wizard as usual. It will store all data in `/data`.
-  Hint: `docker run --rm -it -h icinga-master -v icinga-master:/data icinga/icinga2 icinga2 node wizard`
+* Run the node wizard as usual. It will store all data in `/data`. Hint:
+  `docker run --rm -ith icinga-master -v icinga-master:/data icinga/icinga2 icinga2 node wizard`
 * Provide configuration files, certificates, etc.
-  in `/data/etc/icinga2` and `/data/var/...` by yourself.
+  in `/data/etc/icinga2` and `/data/var/lib/icinga2` by yourself.
   Consult the [Icinga 2 configuration documentation]
   on which configuration files there are.
-* Provide environment variables as shown above.
+* Provide environment variables as shown below.
+
+**Don't mount volumes under subdirectories of `/data`**
+unless `/data` is already initialized!
+Otherwise `/data` will stay incomplete, i.e. broken.
+
+### Single node
+
+Running a single node setup is pretty simple:
+
+* Permanently give the container a hostname of your choice,
+  so that Icinga's `NodeName` constant doesn't change
+* Mount a volume under `/data`, to persist the state file etc..
+
+```bash
+docker run --rm --detach \
+	--hostname icinga \
+	--volume icinga:/data \
+	icinga/icinga2
+```
+
+### API
+
+In addition to the above, set the environment variable `ICINGA_MASTER=1`,
+so that `icinga2 node setup` is run. Also make sure you can reach the API:
+
+* Either from other containers via a well-known hostname: `--name icinga`
+* And/or from other hosts via port forwarding: `--publish 5665:5665`
+
+```bash
+docker run --rm --detach \
+	--hostname icinga \
+	--volume icinga:/data \
+	--env ICINGA_MASTER=1 \
+	--name icinga \
+	--publish 5665:5665 \
+	icinga/icinga2
+```
+
+### Cluster
+
+To join an existing master and assemble a cluster, the new node has to trust
+the existing CA and to provide a ticket to get an own certificate.
+
+#### Export the CA from the master
+
+```bash
+docker run --rm \
+	--hostname icinga-master \
+	--volume icinga-master:/data \
+	--env ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	cat /var/lib/icinga2/certs/ca.crt > icinga-ca.crt
+```
+
+This command will also properly initialize the `icinga-master` volume if empty.
+
+#### Generate a ticket for the new node
+
+```bash
+docker run --rm \
+	--hostname icinga-master \
+	--volume icinga-master:/data \
+	--env ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	icinga2 pki ticket --cn icinga-agent > icinga-agent.ticket
+```
+
+If the master hasn't run yet, the command will fail.
+In this case, run this command first (once):
+
+```bash
+docker run --rm \
+	--hostname icinga-master \
+	--volume icinga-master:/data \
+	--env ICINGA_MASTER=1 \
+	icinga/icinga2 \
+	icinga2 daemon -C
+```
+
+#### Assemble the cluster
+
+```bash
+docker network create icinga
+
+# Master
+docker run --rm --detach \
+	--network icinga \
+	--hostname icinga-master \
+	--name icinga-master \
+	--publish 5665:5665 \
+	--volume icinga-master:/data \
+	--env ICINGA_MASTER=1 \
+	icinga/icinga2
+
+# Agent
+docker run --rm --detach \
+	--network icinga \
+	--hostname icinga-agent \
+	--volume icinga-agent:/data \
+	--env ICINGA_ZONE=icinga-agent \
+	--env ICINGA_ENDPOINT=icinga-master,icinga-master,5665 \
+	--env ICINGA_CACERT="$(< icinga-ca.crt)" \
+	--env ICINGA_TICKET="$(< icinga-agent.ticket)" \
+	icinga/icinga2
+```
+
+The above environment variables correspond to `icinga2 node setup` CLI parameters.
+
+### Notifications
 
 To notify by e-mail, provide an [msmtp configuration] - either
 by mounting the `/etc/msmtprc` file or by specifying the desired content
 of `~icinga/.msmtprc` via the environment variable `MSMTPRC`.
 
-**Don't mount volumes under `/data/etc/icinga2` or `/data/var/*/icinga2`**
-unless `/data` already contains all of these directories!
-Otherwise `/data` will stay incomplete, i.e. broken.
-
-### Environment variables
+### Environment variable reference
 
 Most of the following variables correspond to
 `icinga2 node setup` CLI parameters.
