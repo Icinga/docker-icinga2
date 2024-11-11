@@ -26,6 +26,7 @@ FROM debian:bullseye-slim as build-plugins
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
+	apt-get upgrade -y;\
 	apt-get install --no-install-{recommends,suggests} -y \
 		autoconf automake make ;\
 	apt-get clean ;\
@@ -63,6 +64,7 @@ FROM debian:bullseye-slim as build-icinga2
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
+	apt-get upgrade -y;\
 	apt-get install --no-install-{recommends,suggests} -y \
 		bison cmake flex g++ git \
 		libboost{,-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,test,thread}}1.74-dev \
@@ -94,7 +96,7 @@ RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 FROM debian:bullseye-slim as icinga2
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; apt-get upgrade -y; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
