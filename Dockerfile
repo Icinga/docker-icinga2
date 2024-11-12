@@ -1,6 +1,6 @@
 # Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
-FROM golang:bullseye as entrypoint
+FROM golang:bookworm as entrypoint
 
 COPY entrypoint /entrypoint
 
@@ -22,7 +22,7 @@ RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
 	rm -rf *.git
 
 
-FROM debian:bullseye-slim as build-plugins
+FROM debian:bookworm-slim as build-plugins
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
@@ -60,7 +60,7 @@ RUN cd /check_postgres ;\
 	# Otherwise: cannot copy to non-directory: /var/lib/docker/overlay2/r1tfzp762j3qxieib2fy3230x/merged/usr/local/man
 
 
-FROM debian:bullseye-slim as build-icinga2
+FROM debian:bookworm-slim as build-icinga2
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
 RUN apt-get update ;\
@@ -94,9 +94,9 @@ RUN strip -g /icinga2-bin/usr/lib/nagios/plugins/check_nscp_api
 RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 
-FROM debian:bullseye-slim as icinga2
+FROM debian:bookworm-slim as icinga2
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; apt-get upgrade -y; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl1.1 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; apt-get upgrade -y; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl3 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
