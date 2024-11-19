@@ -72,6 +72,8 @@ of `~icinga/.msmtprc` via the environment variable `MSMTPRC`.
 **Don't mount volumes under `/data/etc/icinga2` or `/data/var/*/icinga2`**
 unless `/data` already contains all of these directories!
 Otherwise `/data` will stay incomplete, i.e. broken.
+At best run a so-called init container first, with only `/data` mounted.
+It will properly initialize `/data` if empty.
 
 ### Environment variables
 
