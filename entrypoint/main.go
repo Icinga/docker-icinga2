@@ -38,13 +38,16 @@ func entrypoint() error {
 	if os.Getpid() == 1 {
 		logf(info, "Initializing /data as we're the init process (PID 1)")
 
-		for _, dir := range []string{"etc", "var/cache", "var/lib", "var/log", "var/run", "var/spool"} {
-			dest := path.Join("/data", dir, "icinga2")
+		for _, dir := range []string{
+			"etc/icinga2", "conf.d", "constants.conf", "features-enabled", "zones.conf", "zones.d",
+			"var/cache/icinga2", "var/lib/icinga2", "var/log/icinga2", "var/run/icinga2", "var/spool/icinga2",
+		} {
+			dest := path.Join("/data", dir)
 			logf(info, "Checking %#v", dest)
 
 			if _, errSt := os.Stat(dest); errSt != nil {
 				if os.IsNotExist(errSt) {
-					src := path.Join("/data-init", dir, "icinga2")
+					src := path.Join("/data-init", dir)
 					logf(info, "Copying %#v to %#v", src, dest)
 
 					if errMA := os.MkdirAll(path.Dir(dest), 0755); errMA != nil {
