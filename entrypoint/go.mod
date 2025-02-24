@@ -4,5 +4,5 @@ go 1.14
 
 require (
 	github.com/otiai10/copy v1.5.1
-	golang.org/x/crypto v0.32.0
+	golang.org/x/crypto v0.34.0
 )
