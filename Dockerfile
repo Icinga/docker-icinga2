@@ -114,6 +114,14 @@ COPY --from=build-icinga2 /icinga2-bin/ /
 RUN ["install", "-o", "icinga", "-g", "icinga", "-d", "/data"]
 RUN ["bash", "-exo", "pipefail", "-c", "for d in /etc/icinga2 /var/*/icinga2; do mkdir -p $(dirname /data-init$d); mv $d /data-init$d; ln -vs /data$d $d; done"]
 
+# One shall mount /data. One can also mount /data/X.
+# But mounting /data/Y/Z will create /data/Y as root and forbid the icinga user to write there.
+# https://stackoverflow.com/questions/66362660/#comment122948160_66362660
+# Hence, we have to move /data/etc/icinga2/* two levels up, so one can mount e.g. /data/conf.d in addition to /data.
+# This also keeps everything under /data not to break any existing usage.
+# But, for a nice interface, we also create symlinks under /, so one can mount e.g. /data/conf.d as /conf.d.
+RUN ["bash", "-exo", "pipefail", "-c", "cd /data-init/etc/icinga2; for d in conf.d constants.conf features-enabled zones.*; do mv $d ../..; ln -vs ../../$d .; ln -vs /data/$d /; done"]
+
 EXPOSE 5665
 USER icinga
 CMD ["icinga2", "daemon"]
