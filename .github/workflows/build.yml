@@ -24,7 +24,7 @@ jobs:
       - run: docker buildx create --use
 
       - name: Icinga 2
-        run: git clone https://github.com/Icinga/icinga2.git
+        run: git clone -b support/2.15 https://github.com/Icinga/icinga2.git
 
       - name: Build
         run: ./build.bash ./icinga2 all
