@@ -1,5 +1,14 @@
 <!-- Icinga 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+ -->
 
+> [!IMPORTANT]
+> This information only applies to older versions of the Icinga 2 Docker images.
+>
+> For version 2.16 and later, the documentation is now part of the [Icinga 2
+> documentation](https://icinga.com/docs/icinga-2/latest/doc/02-installation/For-Container/)
+> and the build files are also maintained inside the Icinga 2 repository
+> ([Containerfile](https://github.com/Icinga/icinga2/blob/master/Containerfile),
+> [entrypoint](https://github.com/Icinga/icinga2/tree/master/tools/container)).
+
 # Icinga 2 - Docker image
 
 This image integrates [Icinga 2] into your [Docker] environment.
