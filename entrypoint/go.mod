@@ -1,10 +1,10 @@
 module entrypoint
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/otiai10/copy v1.14.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 )
 
 require (
