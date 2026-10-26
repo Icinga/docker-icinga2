@@ -25,7 +25,7 @@ runs:
       run: |
         docker login -u icingaadmin --password-stdin <<<"$PW"
 
-    - if: github.event_name == 'release' || github.event_name == 'push'
+    - if: github.event_name == 'release'
       shell: bash
       run: git fetch --unshallow
 
@@ -35,12 +35,7 @@ runs:
         '${{ github.action_path }}/build.bash' . push "$(tr -d v <<<'${{ github.ref_name }}')"
         '${{ github.action_path }}/mktags.bash' '${{ github.ref_name }}'
 
-    - if: github.event_name == 'push'
-      shell: bash
-      run: |
-        '${{ github.action_path }}/build.bash' . push "$(tr / - <<<'${{ github.ref_name }}')"
-
-    - if: github.event_name != 'release' && github.event_name != 'push'
+    - if: github.event_name != 'release'
       shell: bash
       run: |
         '${{ github.action_path }}/build.bash' . all
