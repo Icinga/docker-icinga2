@@ -19,7 +19,7 @@ jobs:
         run: sudo apt-get update
 
       - name: QEMU
-        run: sudo apt-get install -y qemu-user-static binfmt-support
+        run: sudo apt-get install -y qemu-user binfmt-support
 
       - run: docker buildx create --use
 
