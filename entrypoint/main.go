@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/otiai10/copy"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,6 +18,8 @@ import (
 	"time"
 )
 
+const icingaUid = 5665
+const dataVolume = "/data"
 const ca = "/var/lib/icinga2/certs/ca.crt"
 const crtMode = 0640
 const mSmtpRc = "/var/lib/icinga2/.msmtprc"
@@ -35,11 +38,38 @@ func entrypoint() error {
 		return nil
 	}
 
+	if os.Getuid() == 0 {
+		logf(info, "Giving %s to the icinga user as we're root", dataVolume)
+
+		_ = filepath.WalkDir(dataVolume, func(path string, _ fs.DirEntry, err error) error {
+			if err == nil {
+				err = os.Lchown(path, icingaUid, icingaUid)
+			}
+
+			if err != nil {
+				logf(warning, "Can't chown %s: %s", path, err.Error())
+				return filepath.SkipDir
+			}
+
+			return nil
+		})
+
+		logf(info, "Dropping privileges as we're root")
+
+		if err := syscall.Setgid(icingaUid); err != nil {
+			return err
+		}
+
+		if err := syscall.Setuid(icingaUid); err != nil {
+			return err
+		}
+	}
+
 	if os.Getpid() == 1 {
-		logf(info, "Initializing /data as we're the init process (PID 1)")
+		logf(info, "Initializing %s as we're the init process (PID 1)", dataVolume)
 
 		for _, dir := range []string{"etc", "var/cache", "var/lib", "var/log", "var/run", "var/spool"} {
-			dest := path.Join("/data", dir, "icinga2")
+			dest := path.Join(dataVolume, dir, "icinga2")
 			logf(info, "Checking %#v", dest)
 
 			if _, errSt := os.Stat(dest); errSt != nil {
