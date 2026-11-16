@@ -7,59 +7,6 @@ COPY entrypoint /entrypoint
 WORKDIR /entrypoint
 RUN ["go", "build", "."]
 
-
-FROM buildpack-deps:scm AS clone-plugins
-SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
-
-RUN git clone --bare https://github.com/lausser/check_mssql_health.git ;\
-	git -C check_mssql_health.git archive --prefix=check_mssql_health/ 747af4c3c261790341da164b58d84db9c7fa5480 |tar -x ;\
-	git clone --bare https://github.com/lausser/check_nwc_health.git ;\
-	git -C check_nwc_health.git archive --prefix=check_nwc_health/ a5295475c9bbd6df9fe7432347f7c5aba16b49df |tar -x ;\
-	git clone --bare https://github.com/bucardo/check_postgres.git ;\
-	git -C check_postgres.git archive --prefix=check_postgres/ 58de936fdfe4073413340cbd9061aa69099f1680 |tar -x ;\
-	git clone --bare https://github.com/matteocorti/check_ssl_cert.git ;\
-	git -C check_ssl_cert.git archive --prefix=check_ssl_cert/ 341b5813108fb2367ada81e866da989ea4fb29e7 |tar -x ;\
-	rm -rf *.git
-
-
-FROM debian:bookworm-slim AS build-plugins
-SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
-
-RUN apt-get update ;\
-	apt-get upgrade -y;\
-	apt-get install --no-install-{recommends,suggests} -y \
-		autoconf automake make ;\
-	apt-get clean ;\
-	rm -vrf /var/lib/apt/lists/*
-
-COPY --from=clone-plugins /check_mssql_health /check_mssql_health
-COPY --from=clone-plugins /check_nwc_health /check_nwc_health
-COPY --from=clone-plugins /check_postgres /check_postgres
-
-RUN cd /check_mssql_health ;\
-	mkdir bin ;\
-	autoconf ;\
-	autoreconf ;\
-	./configure "--build=$(uname -m)-unknown-linux-gnu" --libexecdir=/usr/lib/nagios/plugins ;\
-	make ;\
-	make install "DESTDIR=$(pwd)/bin"
-
-RUN cd /check_nwc_health ;\
-	mkdir bin ;\
-	autoreconf ;\
-	./configure "--build=$(uname -m)-unknown-linux-gnu" --libexecdir=/usr/lib/nagios/plugins ;\
-	make ;\
-	make install "DESTDIR=$(pwd)/bin"
-
-RUN cd /check_postgres ;\
-	mkdir bin ;\
-	perl Makefile.PL INSTALLSITESCRIPT=/usr/lib/nagios/plugins ;\
-	make ;\
-	make install "DESTDIR=$(pwd)/bin" ;\
-	rm -rf bin/usr/local/man
-	# Otherwise: cannot copy to non-directory: /var/lib/docker/overlay2/r1tfzp762j3qxieib2fy3230x/merged/usr/local/man
-
-
 FROM debian:bookworm-slim AS build-icinga2
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
@@ -96,16 +43,14 @@ RUN rm -rf /icinga2-bin/usr/share/doc/icinga2/markdown
 
 FROM debian:bookworm-slim AS icinga2
 
-RUN ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; apt-get upgrade -y; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl3 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl; apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+COPY --from=ghcr.io/icinga/icinga2-plugins-container:bookworm /usr/lib/nagios/plugins/* /usr/lib/nagios/plugins/
+COPY --from=ghcr.io/icinga/icinga2-plugins-container:bookworm /plugins.cdx.json /usr/share/sbom/
+
+RUN --mount=from=ghcr.io/icinga/icinga2-plugins-container:bookworm,target=/plugins ["/bin/bash", "-exo", "pipefail", "-c", "apt-get update; apt-get upgrade -y; export DEBIAN_FRONTEND=noninteractive; apt-get install --no-install-{recommends,suggests} -y bc ca-certificates curl dumb-init file libboost-{context,coroutine,date-time,filesystem,iostreams,program-options,regex,system,thread}1.74.0 libcap2-bin libedit2 libldap-common libmariadb3 libmoosex-role-timer-perl libpq5 libssl3 libsystemd0 mailutils msmtp{,-mta} openssh-client openssl $(cat /plugins/debian-packages); apt-get install --no-install-suggests -y monitoring-plugins; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 
 RUN ["adduser", "--system", "--group", "--home", "/var/lib/icinga2", "--disabled-login", "--force-badname", "--no-create-home", "--uid", "5665", "icinga"]
-
-COPY --from=build-plugins /check_mssql_health/bin/ /
-COPY --from=build-plugins /check_nwc_health/bin/ /
-COPY --from=build-plugins /check_postgres/bin/ /
-COPY --from=clone-plugins /check_ssl_cert/check_ssl_cert /usr/lib/nagios/plugins/check_ssl_cert
 
 ENTRYPOINT ["/entrypoint"]
 
